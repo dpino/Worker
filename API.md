@@ -48,3 +48,7 @@ If the main program terminates without terminating the workers explicitly, it is
 ## Questions
 
 Should there be a `terminate()` call inside the worker so that a worker can terminate itself?
+
+Should we have more stringent error checking?
+
+Semantics of errors in event handlers?  In the SpiderMonkey implementation I catch all errors and the program gets to continue, but is this desirable?
