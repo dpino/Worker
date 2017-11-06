@@ -41,7 +41,7 @@ Install an event handler that receives messages from the main thread.  Again, `e
 
 ## Notes
 
-The event loop is implicit on the worker thread for reasons of symmetry with a web browser, but explicit on the main thread because, in a shell setting, the main thread runs to completion and then the shell exits.
+The event loop is implicit on the worker thread for reasons of symmetry with a web browser, but explicit on the main thread because, in a shell setting, the main thread runs to completion and then the shell may exit.
 
 If the main program terminates without terminating the workers explicitly, it is unspecified whether the program exits or hangs, waiting for the workers to terminate.  (In the SpiderMonkey shell it hangs.)
 
