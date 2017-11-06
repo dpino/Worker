@@ -14,7 +14,7 @@ Structured-clone `object`, possibly paying attention to `transfer`, and send it 
 
 ### `w.onmessage = function (ev) ...`
 
-Install an event handler on the worker `w`, which will be invoked when a message is received from that worker.  The data of the message is in `ev.data`, in order to be compatible with the browsers.  There are no other fields in `ev` at this time.
+Install an event handler on the worker `w`, which will be invoked when a message is received from that worker.  The data of the message is in `ev.data`, in order to be compatible with browsers.  There are no other fields in `ev` at this time.
 
 ### `w.terminate()`
 
