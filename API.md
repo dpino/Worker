@@ -10,7 +10,7 @@ Returns a new Worker object.  `source_text` is the string representing the sourc
 
 ### `w.postMessage(object [, transfer])`
 
-Structured-clone `object`, possibly paying attention to `transfer`, and send it to the worker `w`.  If `w` is terminated this may or may not throw an error.
+Structured-clone `object`, possibly paying attention to `transfer`, and send it to the worker `w`.  If `w` has been terminated this may or may not throw an error.
 
 ### `w.onmessage = function (ev) ...`
 
