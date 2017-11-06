@@ -49,6 +49,8 @@ If the main program terminates without terminating the workers explicitly, it is
 
 Should there be a `terminate()` call inside the worker so that a worker can terminate itself?
 
+Should there be a `quit()` or `exit()` function on the main thread that forcibly terminates any workers still running, so that we don't have to terminate them all?  (Perhaps `terminateWorkers()` or similar is a better name.)
+
 Should we have more stringent error checking?
 
 Semantics of errors in event handlers?  In the SpiderMonkey implementation I catch all errors and the program gets to continue, but is this desirable?
