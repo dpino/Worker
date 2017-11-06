@@ -1,27 +1,10 @@
-// Worker abstraction for JS shells.
-//
+// Worker abstraction for JS shells.  See API.md for an API description.
+
 // This is a polyfill / self-hosted implementation for SpiderMonkey's JS shell.
 // Load this in your JS application before other code.
 //
-// API
-//
-// On the main thread:
-//
-//   let w = new Worker(source_text)     // source_text is literal text, name a String
-//   w.postMessage(object)               // serialize object and send to worker
-//   w.onmessage = function (ev) ...     // ev.data is a value
-//   w.terminate()                       // tell the worker to stop processing events
-//   enterEventLoop()                    // start dispatching messages from workers
-//   exitEventLoop()                     // causes eventLoop() to return
-//
-// On the worker thread:
-//
-//   postMessage(object)                 // send back to parent
-//   onmessage = function (ev) { ... }   // receive from parent, ev.data has datum
-//
-// The event loop is implicit on the worker thread for reasons of symmetry with
-// a web browser, but explicit on the main thread because, in a shell setting,
-// the main thread runs to completion and then the shell exits.
+// The polyfill uses shared memory and atomics for synchronization, and a
+// SpiderMonkey-specific messaging substrate to clone data and send it.
 
 "use strict";
 
@@ -40,8 +23,6 @@ const W2M_NUMBYTES = 2 * Int32Array.BYTES_PER_ELEMENT;
 const workers = [null];		// Worker 0 is not defined
 
 const w2m = new Int32Array(new SharedArrayBuffer(W2M_NUMBYTES));
-let inloop = false;		// Set when entering the main event loop
-let exiting = false;		// Set when leaving the main event loop
 
 function Worker(source_text) {
     const id = workers.length;
@@ -49,7 +30,7 @@ function Worker(source_text) {
     const timeout = 5000;
 
     putMessage(id, [w2m, m2w]);
-    Atomics.write(w2m, W2M_ID, id);
+    Atomics.store(w2m, W2M_ID, id);
 
     evalInWorker(
 	`
@@ -57,8 +38,8 @@ function Worker(source_text) {
 
 	function onmessage(ev) {}
 
-	function postMessage(msg) {
-	    putMessage(0, [${id}, msg]);
+	function postMessage(msg, transfer) {
+	    putMessage(0, [${id}, msg], transfer);
 	    Atomics.add(_w2m, ${W2M_MESSAGES}, 1);
 	    Atomics.wake(_w2m, ${W2M_MESSAGES});
 	}
@@ -77,7 +58,8 @@ function Worker(source_text) {
 	    try {
 		onmessage({data:msg});
 	    } catch (e) {
-		print("WORKER ${id}:\n" + e);
+		print("WORKER ${id}:");
+		print(e);
 	    }
 	}
         `
@@ -104,6 +86,9 @@ Worker.prototype.terminate = function () {
     Atomics.wake(this._m2w, M2W_MESSAGES);
 }
 
+let inloop = false;		// Set when entering the main event loop
+let exiting = false;		// Set when leaving the main event loop
+
 function enterEventLoop() {
     if (inloop)
 	throw new Error("Already in event loop");
@@ -111,13 +96,14 @@ function enterEventLoop() {
     exiting = false;
     inloop = true;
     while (!exiting) {
-	Atomics.wait(this._w2m, W2M_MESSAGES, 0);
+	Atomics.wait(w2m, W2M_MESSAGES, 0);
 	let [w, msg] = getMessage(0);
-	Atomics.sub(this._w2m, W2M_MESSAGES, 1);
+	Atomics.sub(w2m, W2M_MESSAGES, 1);
 	try {
 	    workers[w].onmessage({data: msg});
 	} catch (e) {
-	    print("MAIN:\n" + e);
+	    print("MAIN:")
+	    print(e);
 	}
     }
     inloop = false;
