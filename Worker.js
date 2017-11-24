@@ -73,6 +73,10 @@ function Worker(source_text) {
     workers.push(this);
 }
 
+Worker.create = function(source_text) {
+    return new Worker(source_text);
+}
+
 Worker.prototype.postMessage = function (msg, transfer) {
     putMessage(this._id, msg, transfer);
     Atomics.add(this._m2w, M2W_MESSAGES, 1);
@@ -109,10 +113,15 @@ function enterEventLoop() {
     inloop = false;
 }
 
-function exitEventLoop() {
+function exitEventLoop(w) {
     if (!inloop)
 	throw new Error("Not in event loop");
     exiting = true;
+    if (w.constructor === Array) {
+        w.forEach((w) => w.terminate());
+    } else if (typeof w === 'object') {
+        w.terminate();
+    }
 }
 
 function sleep(ns) {

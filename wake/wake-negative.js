@@ -10,7 +10,7 @@ description: >
   Test that Atomics.wake wakes zero waiters if the count is negative
 ---*/
 
-let w = new Worker(`
+let w = Worker.create(`
     onmessage = function(e) {
         let ia = new Int32Array(e.data[0]);
         let ret = Atomics.wait(ia, 0, 0, 1000); // We will timeout eventually
@@ -19,7 +19,7 @@ let w = new Worker(`
 `);
 w.onmessage = function(e) {
     assert.sameValue(e.data[0], "timed-out");
-    exitEventLoop();
+    exitEventLoop(w);
 }
 
 let ia = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
@@ -29,4 +29,3 @@ sleep(500).then(() => // Give the agent a chance to wait
     assert.sameValue(Atomics.wake(ia, 0, -1), 0)); // Don't actually wake it
 
 enterEventLoop();
-w.terminate();
