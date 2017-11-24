@@ -114,3 +114,20 @@ function exitEventLoop() {
 	throw new Error("Not in event loop");
     exiting = true;
 }
+
+function sleep(ns) {
+    function wait(sec) {
+        let start = Date.now();
+        while (true) {
+            if (Date.now() - start > sec) {
+                return;
+            }
+        }
+    }
+    wait(ns);
+    return {
+        then: function(fn) {
+            if (fn) { fn(); }
+        }
+    }
+}
