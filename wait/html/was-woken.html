@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="../../browser-harness.js"></script>
+  </head>
+
+  <body>
+
+  </body>
+
+  <script type="text/javascript">
+  window.addEventListener('load', function() {
+		// Copyright (C) 2017 Mozilla Corporation.  All rights reserved.
+		// This code is governed by the BSD license found in the LICENSE file.
+
+		/*---
+		esid: sec-atomics.wait
+		description: >
+			Test that Atomics.wait returns the right result when it was awoken.
+		---*/
+
+    let w = createWorkerFromString(`
+        onmessage = function(e) {
+          let ia = new Int32Array(e.data[0]);
+          let ret = Atomics.wait(ia, 0, 0); // No timeout => Infinity
+          postMessage([ret]);
+        }
+    `);
+
+    w.onmessage = function(e) {
+      assert.sameValue(e.data[0], "ok");
+      exitEventLoop(w);
+    }
+
+    let ia = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
+    w.postMessage([ia.buffer]);
+
+    // Give the agent a chance to wait.
+    sleep(500).then(() => Atomics.wake(ia, 0));
+
+    enterEventLoop();
+  });
+  </script>
+
+</html>

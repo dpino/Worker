@@ -1,4 +1,4 @@
-Worker.create = function(source_text) {
+createWorkerFromString = function(source_text) {
     let blob = new Blob([source_text], {type: 'text/javascript'});
     let url = URL.createObjectURL(blob);
     return new Worker(url);
